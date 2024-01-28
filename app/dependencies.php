@@ -30,7 +30,7 @@ return function (ContainerBuilder $containerBuilder) {
             $configs = $c->get(SettingsInterface::class)->get('db');
             $connectionString = "mysql:host={$configs['host']};dbname={$configs['dbname']};";
 
-            $connection = new \PDO($connectionString, $configs['username'], $configs['password']);
+            $connection = new \PDO($connectionString, $configs['username'], $configs['password'], array(PDO::MYSQL_ATTR_INIT_COMMAND => "SET NAMES utf8"));
             $connection->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
             return $connection;

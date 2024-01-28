@@ -2,19 +2,19 @@
 
 declare(strict_types=1);
 
-namespace App\Application\Content;
+namespace App\Application\Actions\Content;
 
+use App\Application\Actions\Template\TemplateAction;
 use App\Application\Settings\SettingsInterface;
-use App\Domain\Template\TemplateValidator;
+use App\Domain\Content\ContentValidator;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Log\LoggerInterface;
-use App\Application\Actions\Content\ContentAction;
 
-class SaveContentAction extends ContentAction
+class SaveContentAction extends TemplateAction
 {
-    protected TemplateValidator $validator;
+    protected ContentValidator $validator;
 
-    public function __construct(LoggerInterface $logger, \PDO $db, SettingsInterface $settings, TemplateValidator $validator)
+    public function __construct(LoggerInterface $logger, \PDO $db, SettingsInterface $settings, ContentValidator $validator)
     {
         parent::__construct($logger, $db, $settings);
         $this->validator = $validator;
@@ -25,51 +25,24 @@ class SaveContentAction extends ContentAction
      */
     protected function action(): Response
     {
-        $table = $this->settings->get('db')['templateTable'];
-        $formData = $this->getFormData();
+        $table = $this->settings->get('db')['contentTable'];
+        $formData = $this->request->getParsedBody();
 
         if (!$this->validator->isValid($formData)) {
-            return $this->respondWithData(["type" => "form_errors", "errors" => $this->validator->errors()], 400);
+            return $this->respondWithData(["type" => "form_errors", "message" => "Invalid form data."], 400);
         }
 
-        $urlId = !empty($formData['url_id']) ? $formData['url_id'] : $this->generateUrlid();
         $data = [
-            $formData['url'],
-            $formData['domain'],
-            $formData['name'],
-            $formData['content'],
-            $formData['selector'],
-            $formData['metadata'],
+            $formData['url_id'],
+            $formData['scraped']['url'],
+            $formData['scraped']['title'],
+            $formData['scraped']['content'],
+            'browser extension',
         ];
 
-        $result = false;
-        $error = null;
-        $count = 0;
-
-        if (!empty($formData['url_id'])) {
-            try {
-                $updateStatement = $this->db->prepare("UPDATE `{$table}` 
-                                                 SET `url` = ?,
-                                                     `domain` = ?,
-                                                     `name` = ?,
-                                                     `content` = ?,
-                                                     `selector` = ?,
-                                                     `metadata` = ?
-                                                 WHERE `url_id` = ?");
-                array_push($data, $urlId);
-                $result = $updateStatement->execute($data);
-                return $this->respondWithData(["type" => "response", "result" => $result, "count" => $updateStatement->rowCount()]);
-            } catch (\Exception $exception) {
-                $error = $updateStatement->errorInfo()[2];
-                return $this->respondWithData(["type" => "error", "message" => $error], 500);
-            }
-        }
-
-
-        $statement = $this->db->prepare("INSERT INTO `{$table}` (`url_id`, `url`, `domain`, `name`, `content`, `selector`, `metadata`) VALUES (?, ?, ?, ?, ?, ?, ?)");
+        $statement = $this->db->prepare("INSERT INTO `{$table}` (`template_url_id`, `url`, `title`, `information`, `category`) VALUES (?, ?, ?, ?, ?)");
 
         try {
-            array_unshift($data, $urlId);
             $result = $statement->execute($data);
             return $this->respondWithData(["type" => "response", "result" => $result]);
         } catch (\Exception $exception) {

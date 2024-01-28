@@ -4,13 +4,12 @@ declare(strict_types=1);
 
 use App\Application\Actions\Template\RemoveTemplateAction;
 use App\Application\Actions\Template\SaveTemplateAction;
-use App\Application\Actions\User\ListUsersAction;
-use App\Application\Actions\User\ViewUserAction;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Slim\App;
 use Slim\Interfaces\RouteCollectorProxyInterface as Group;
 use \App\Application\Actions\Template\ListTemplatesAction;
+use \App\Application\Actions\Content\SaveContentAction;
 
 return function (App $app) {
     $app->options('/{routes:.*}', function (Request $request, Response $response) {
@@ -24,6 +23,10 @@ return function (App $app) {
 
         $response->getBody()->write('Hello world!');
         return $response;
+    });
+
+    $app->group('/content', function (Group $group) {
+        $group->post('/save', SaveContentAction::class);
     });
 
     $app->group('/templates', function (Group $group) {

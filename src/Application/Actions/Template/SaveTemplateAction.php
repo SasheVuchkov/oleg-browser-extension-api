@@ -30,10 +30,9 @@ class SaveTemplateAction extends TemplateAction
         $table = $this->settings->get('db')['templateTable'];
         $formData = $this->request->getParsedBody();
 
-        /*
         if (!$this->validator->isValid($formData)) {
-            return $this->respondWithData(["type" => "form_errors", "errors" => $this->validator->errors()], 400);
-        }*/
+            return $this->respondWithData(["type" => "form_errors", "message" => "Invalid form data."], 400);
+        }
 
         $urlId = !empty($formData['url_id']) ? $formData['url_id'] : $this->generateUrlid();
         $data = [
@@ -53,7 +52,7 @@ class SaveTemplateAction extends TemplateAction
                                                  SET `url` = ?,
                                                      `domain` = ?,
                                                      `name` = ?,
-                                                     `items` = ?,
+                                                     `items` = ?
                                                  WHERE `url_id` = ?");
                 array_push($data, $urlId);
                 $result = $updateStatement->execute($data);

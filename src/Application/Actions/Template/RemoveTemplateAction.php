@@ -4,37 +4,42 @@ declare(strict_types=1);
 
 namespace App\Application\Actions\Template;
 
-use App\Application\Actions\Template\TemplateAction;
+use App\Application\Settings\SettingsInterface;
+use App\Domain\Template\TemplateValidator;
 use Psr\Http\Message\ResponseInterface as Response;
+use Psr\Log\LoggerInterface;
 
 class RemoveTemplateAction extends TemplateAction
 {
+    protected TemplateValidator $validator;
+
+    public function __construct(LoggerInterface $logger, \PDO $db, SettingsInterface $settings, TemplateValidator $validator)
+    {
+        parent::__construct($logger, $db, $settings);
+        $this->validator = $validator;
+    }
     /**
      * {@inheritdoc}
      */
     protected function action(): Response
     {
         $table = $this->settings->get('db')['templateTable'];
-        $formData = $this->getFormData();
+        $formData = $this->request->getParsedBody();
 
-
-
-        if (empty($formData['template_url_id']) || !is_string($formData['template_url_id'])) {
-            return $this->respondWithData(["type" => "error", "message" => "invalid data"], 400);
+        if (empty($formData['url_id'])) {
+            return $this->respondWithData(["type" => "form_errors", "message" => "Invalid form data."], 400);
         }
-
-        $statement = $this->db->prepare("DELETE FROM {$table} WHERE `url_id` = ?  LIMIT 1");
-
-        $result = false;
-        $error = null;
+        $data = [
+            $formData['url_id'],
+        ];
+        $statement = $this->db->prepare("DELETE FROM `{$table}` WHERE `url_id` = ? LIMIT 1");
 
         try {
-            $result = $statement->execute([$formData['template_url_id']]);
+            $result = $statement->execute($data);
+            return $this->respondWithData(["type" => "response", "result" => $result]);
         } catch (\Exception $exception) {
-            $result = false;
             $error = $statement->errorInfo()[2];
+            return $this->respondWithData(["type" => "error", "message" => $error], 500);
         }
-
-        return $this->respondWithData(["type" => "response", "result" => $result, "error" => $error]);
     }
 }

@@ -27,6 +27,7 @@ return function (ContainerBuilder $containerBuilder) {
                     'password' => '123654789my',
                     'dbname' => 'oleg',
                     'templateTable' => 'scraping_templates',
+                    'contentTable' => 'scraped_content',
                 ]
             ]);
         }

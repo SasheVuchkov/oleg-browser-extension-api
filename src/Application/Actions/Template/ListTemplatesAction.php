@@ -16,7 +16,6 @@ class ListTemplatesAction extends TemplateAction
         $table = $this->settings->get('db')['templateTable'];
         $formData = $this->getFormData();
 
-        sleep(5);
         if (empty($formData['domain']) || !is_string($formData['domain'])) {
             return $this->respondWithData(["type" => "error", "message" => "invalid data"], 400);
         }
