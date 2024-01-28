@@ -10,6 +10,7 @@ use Slim\App;
 use Slim\Interfaces\RouteCollectorProxyInterface as Group;
 use \App\Application\Actions\Template\ListTemplatesAction;
 use \App\Application\Actions\Content\SaveContentAction;
+use \App\Application\Actions\Template\ListTemplatesAllAction;
 
 return function (App $app) {
     $app->options('/{routes:.*}', function (Request $request, Response $response) {
@@ -31,6 +32,7 @@ return function (App $app) {
 
     $app->group('/templates', function (Group $group) {
         $group->post('', ListTemplatesAction::class);
+        $group->get('/all', ListTemplatesAllAction::class);
         $group->post('/save', SaveTemplateAction::class);
         $group->post('/remove', RemoveTemplateAction::class);
     });
